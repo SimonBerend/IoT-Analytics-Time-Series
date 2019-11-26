@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1574775658159.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3111650265",
+    "id" : "A8E3291E",
+    "lastKnownWriteTime" : 1574775675,
+    "last_content_update" : 1574775675525,
+    "path" : "C:/Users/Gebruiker/Desktop/Esgitit/IoT Analytics/test.R",
+    "project_path" : "test.R",
+    "properties" : {
+        "cursorPosition" : "0,5",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
