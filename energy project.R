@@ -184,40 +184,50 @@ ggplot(tiMon, aes(x = day, y = Watth)) +
 ################################
 ####        Years to do           #### 
 ################################
+# create sets: yearly en consumption per month,day
+en2009 <- energy %>% 
+  na.omit() %>%
+  filter(year == 2009) %>%
+  group_by(month,day) %>% 
+  summarise(total.2009 = mean(total))
 
-tot2007 <- energy %<% subset()
+## Join that shizz 
+enYear <- inner_join(en2007, en2008, by = c("month", "day"))
+enYear <- inner_join(enYear, en2009, by = c("month", "day"))
+enYear <- inner_join(enYear, en3ytot, by = c("month", "day"))
 
-
-
-## Group data set by time attributes ##
-enHour <- energy %>% na.omit() %>%
-  group_by(hour) %>% 
-  summarise(mKitchen = mean(kitchen),
-            mLaundry = mean(laundry),
-            mClimat = mean(climat))
-
-## line plot: areas / hours
-ggplot(enHour, aes(x=hour)) + 
-  geom_line(aes(y = mKitchen), color = "darkred", size = 1) +
-  geom_line(aes(y = mLaundry), color = "darkblue", size = 1) + 
-  geom_line(aes(y = mClimat), color="darkgreen", linetype="twodash", size = 1)
-
-## line plot: areas / hour : tydiverse
+colnames(enYear)
+## line plot: years / month,day : tydiverse
 # Data preparation
-tiHour <- enHour %>%
-  select(hour, mKitchen, mLaundry, mClimat) %>%
-  pivot_longer(-hour, names_to = "submeter", values_to = "Watth")
+tiYear <- enYear %>%
+  select(month, day,
+         total.2007, total.2008,
+         total.2009, overall.avg) %>%
+  pivot_longer(-c(month, day),
+               names_to = "period",
+               values_to = "Watth")
 
+## turn month, day into one variable
+tiYear$monthDay <- paste( month.abb[tiYear$month],
+                          tiYear$day,
+                          sep="-" )
+### 
+tiYear$monthDay <- factor(tiYear$monthDay,
+                          levels=unique(tiYear$monthDay),ordered=TRUE)
+
+str(tiYear$monthDay)
 # Visualization
-ggplot(tiHour, aes(x = hour, y = Watth)) + 
-  geom_line(aes(color = submeter, 
-                linetype = submeter)) + 
-  scale_fill_brewer(palette = "Set3") +
-  labs(title = "Mean Weekly E-Consumption",
-       subtitle = "(2007-2009)",
-       x = "Time (0-24 h)",
+ggplot(tiYear, aes(x = monthDay, y = Watth, group = period)) + 
+  geom_smooth(aes(color = period),
+              method = "loess",
+              span = 0.1,
+              se = FALSE) +
+  labs(title = "Mean Yearly E-Consumption",
+       subtitle = "(Smoothened)",
+       x = "With the Seasons",
        y = "Consumption (W/h - active e)")+
-  theme_bw()
+  theme_bw() + 
+  scale_x_discrete(breaks = c("Jan-1", "Feb-1", "Mar-1", "Apr-1",
+                              "May-1", "Jun-1", "Jul-1", "Aug-1",
+                              "Sep-1", 'Oct-1', "Nov-1", "Dec-1"))
 
-month(energy$DateTime)
-day()
