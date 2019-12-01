@@ -23,24 +23,24 @@ con = dbConnect(MySQL(),
 ## 2006
 yr2006 <- dbGetQuery(con,"SELECT Date, Time,
                      Sub_metering_1, Sub_metering_2,
-                     Sub_metering_3 FROM yr_2006")
+                     Sub_metering_3, global_active_power FROM yr_2006")
 
 ## 2007
 yr2007 <- dbGetQuery(con,"SELECT Date, Time,
                      Sub_metering_1, Sub_metering_2,
-                     Sub_metering_3 FROM yr_2007")
+                     Sub_metering_3, global_active_power FROM yr_2007")
 ## 2008
 yr2008 <- dbGetQuery(con,"SELECT Date, Time,
                      Sub_metering_1, Sub_metering_2,
-                     Sub_metering_3 FROM yr_2008")
+                     Sub_metering_3, global_active_power FROM yr_2008")
 ## 2009
 yr2009 <- dbGetQuery(con,"SELECT Date, Time,
                      Sub_metering_1, Sub_metering_2,
-                     Sub_metering_3 FROM yr_2009")
+                     Sub_metering_3, global_active_power FROM yr_2009")
 ## 2010
 yr2010 <- dbGetQuery(con,"SELECT Date, Time,
                      Sub_metering_1, Sub_metering_2,
-                     Sub_metering_3 FROM yr_2010")
+                     Sub_metering_3, global_active_power FROM yr_2010")
 
 
         ########################################
@@ -182,8 +182,8 @@ ggplot(tiMon, aes(x = day, y = Watth)) +
 
 
 ################################
-####        Years to do           #### 
-################################
+####     Years (per Day)    ### 
+##############################
 # create sets: yearly en consumption per month,day
 en2009 <- energy %>% 
   na.omit() %>%
@@ -220,14 +220,15 @@ str(tiYear$monthDay)
 ggplot(tiYear, aes(x = monthDay, y = Watth, group = period)) + 
   geom_smooth(aes(color = period),
               method = "loess",
-              span = 0.1,
+              span = 0.15,
               se = FALSE) +
-  labs(title = "Mean Yearly E-Consumption",
+  labs(title = "Yearly E-Consumption",
        subtitle = "(Smoothened)",
-       x = "With the Seasons",
-       y = "Consumption (W/h - active e)")+
+       y = "Consumption (W/h - active e)",
+       x = NULL)+
   theme_bw() + 
   scale_x_discrete(breaks = c("Jan-1", "Feb-1", "Mar-1", "Apr-1",
                               "May-1", "Jun-1", "Jul-1", "Aug-1",
                               "Sep-1", 'Oct-1', "Nov-1", "Dec-1"))
+
 
