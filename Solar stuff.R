@@ -7,7 +7,7 @@
 enMonthly <- energy %>% 
   na.omit() %>%
   group_by(month) %>% 
-  summarise(consumption = mean(total))
+  summarise(consumption = (sum(total)/3000))
 
 # set months as ordered factor
 enMonthly$month <- factor(enMonthly$month,
@@ -26,9 +26,9 @@ enMonthly$sun <- as.numeric(c("2.1",	"3.0", "4.9",
 # Solar panel watts x average hours of sunlight x 75% = daily watt-hours 
 # https://www.vivintsolar.com/blog/how-calculate-solar-panel-output
 # google: "a domestic solar panel has a power output of around 265 watts"
-# install 4 panels of 250W = 1000 W
+# install 6 panels of 300W = 1000 W
 
-enMonthly$production <- as.numeric(750 * enMonthly$sun / 24 / 60)
+enMonthly$production <- as.numeric(1350 * enMonthly$sun * 30 /1000)
 
 
 
@@ -39,19 +39,20 @@ tiMonthly <- enMonthly %>%
          production) %>%
   pivot_longer(-month,
                names_to = "cons.prod",
-               values_to = "W.h")
+               values_to = "kW.h")
 
 
 # Visualization
-ggplot(tiMonthly, aes(x = month, y = W.h, group = cons.prod)) + 
+ggplot(tiMonthly, aes(x = month, y = kW.h, group = cons.prod)) + 
   geom_smooth(aes(color = cons.prod),
               method = "loess",
               span = 0.3,
               se = FALSE) +
   labs(title = "Consumption and Solar Panel Production",
-       subtitle = "(Based on Paris sun hours)",
-       y = "W/h",
-       x = "Months")+
+       subtitle = "(Prod: 6 x 300 W solar panels)",
+       y = "kW/h",
+       x = "Months",
+       fill = "Energy")+
   theme_bw()
 
 

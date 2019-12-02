@@ -55,7 +55,15 @@ energy$DateTime <- paste(energy$Date,energy$Time)
 
 ## make an extra column with total energy consumption
 energy$total <- energy$kitchen + energy$laundry + energy$climat
-               
+            
+## calculate avarage yearly consumption
+## energy$total gives total Wh consumed every minute
+
+sumTotal <- sum(energy$total)
+sumTotal # in Wh
+sumKWh <- sumTotal / 3 / 1000 
+sumKWh
+
 ## Give the new attribute in the 6th column a header name 
 ## NOTE: if you downloaded more than 5 attributes you will need to change the column number)
 colnames(energy)
@@ -67,8 +75,7 @@ energy$DateTime <- as.POSIXct(energy$DateTime,
                               "%Y-%m-%d %H:%M:%S", tz = "CET" )
 
 ## Check time zone
-attr(energy$DateTime, "tzone")
-
+#attr(energy$DateTime, "tzone")
 
   ### Lubridate that Shzz  ###
  ## Add time zone without changing the clock time
@@ -114,10 +121,11 @@ tiHour <- enHour %>%
   
 # Visualization
 ggplot(tiHour, aes(x = hour, y = Watth)) + 
-  geom_line(aes(color = submeter, 
-                linetype = submeter)) + 
-  scale_fill_brewer(palette = "Set3") +
-  labs(title = "Mean Daily E-Consumption",
+  geom_smooth(aes(color = submeter),
+              method = "loess",
+              span = 0.3,
+              se = FALSE) +
+  labs(title = "Average Daily E-Consumption",
        subtitle = "(2007-2009)",
        x = "Time (0-24 h)",
        y = "Consumption (W/h - active e)")+
@@ -152,6 +160,8 @@ ggplot(tiWeek, aes(x = weekday, y = Watth, group = submeter)) +
        y = "Consumption (W/h - active e)")+
   theme_bw()
 
+
+
    ################################
   ####      Monthly (per day) #### 
  ################################
@@ -179,6 +189,7 @@ ggplot(tiMon, aes(x = day, y = Watth)) +
        x = "Days (1-31)",
        y = "Consumption (W/h - active e)")+
   theme_bw()
+
 
 
 ################################
