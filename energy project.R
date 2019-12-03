@@ -5,7 +5,7 @@ pacman::p_load("ggplot2", "arules", "arulesViz",
                "graphics", "RColorBrewer", "e1071",
                "dplyr", "dbplyr", "RMySQL",
                "RSQLite", "wesanderson", "lubridate",
-               "tidyverse")
+               "tidyverse", "plotly")
 
        ################################
       ####       LOAD DATA        ####
@@ -222,7 +222,7 @@ tiYear <- enYear %>%
 tiYear$monthDay <- paste( month.abb[tiYear$month],
                           tiYear$day,
                           sep="-" )
-### 
+### UNIQUE ###
 tiYear$monthDay <- factor(tiYear$monthDay,
                           levels=unique(tiYear$monthDay),ordered=TRUE)
 
