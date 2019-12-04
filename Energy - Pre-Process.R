@@ -7,7 +7,7 @@ pacman::p_load("ggplot2", "arules", "arulesViz",
                "graphics", "RColorBrewer", "e1071",
                "dplyr", "dbplyr", "RMySQL",
                "RSQLite", "wesanderson", "lubridate",
-               "tidyverse", "plotly")
+               "tidyverse", "plotly", "ggfortify")
 
 ################################
 ####       LOAD DATA        ####

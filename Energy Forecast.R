@@ -1,3 +1,12 @@
+
+#####################################################
+## Run pre-process  ## Packages Needed are There  ###
+#####################################################
+
+source(file = "~/IoT Analytics/Energy - Pre-Process.R",
+       local = FALSE)
+
+
 ####################
 ## PLAN OF ATTACK ##
 ####################
@@ -85,4 +94,71 @@ plot_ly(wedEn,
   layout(title = "Power Consumption Wednesday, Mid-day, Oct, 2009",
          xaxis = list(title = "Time"),
          yaxis = list (title = "Power (watt-hours)"))
+
+##########################################
+## Extra: grouped bar chart with plotly ##
+##########################################
+
+## create the sub-set you want to plot
+## in this case: 1ste week of feb 2007
+week_feb_2007 <- energy %>%
+  filter(year == 2007 & week == 7) %>%
+  na.omit() %>%
+  group_by(weekday) %>% 
+  summarise(sum_kitchen = (sum(kitchen)/1000),
+            sum_laundry = (sum(laundry)/1000),
+            sum_climat = (sum(climat)/1000))
+
+## and plot
+plot_ly(week_feb_2007,x = ~weekday, y = ~sum_kitchen,
+        type = 'bar', name = 'Kitchen') %>%
+  add_trace(y = ~sum_laundry, name = 'Laundry') %>%
+  add_trace(y = ~sum_climat, name = 'Climat') %>%
+  layout() %>%
+  layout(title = "Total Daily Consumption per Submeter, week 7, 2007",
+       xaxis = list(title = "Days of the Week"),
+       yaxis = list(title = "Consumption in kWh"),
+       barmode = 'group')
+ 
+
+#############################
+#####    TIME SERIES   ######
+#############################
+
+##### plot 1 #####
+
+## Subset to one observation per week on Mondays at 8:00pm for 2007, 2008 and 2009
+energy_weekly <- filter(energy, weekday == "maandag" & hour == 20 & minute == 0)
+
+## Create TS object with submeter 3: climat
+ts_sub3_energy_weekly <- ts(energy_weekly$climat, frequency=52, start=c(2007,1))
+
+## Plot sub-meter 3 with autoplot - add labels, color
+autoplot(ts_sub3_energy_weekly,
+         ts.colour = 'darkred',
+         xlab = "Time",
+         ylab = "Watt Hours",
+         main = "Climat Room") +
+  theme_bw()
+
+
+##### plot 2  #####
+
+## Subset to an observation every half hour during the 2008 august dip
+energy_aug_2008 <- filter(energy, year == 2008 & week == 33 &
+                             minute == 0)
+
+## Create TS object with submeter 3: climat
+ts_global_wh_aug_2008 <- ts(energy_aug_2008$global_wh,
+                            frequency = 24,
+                            start = c(1, 1))
+
+## Plot global wh with autoplot - add labels, color
+autoplot(ts_global_wh_aug_2008,
+         ts.colour = 'darkred',
+         xlab = "Time",
+         ylab = "Watt Hours",
+         main = "Global (Wh)") +
+  theme_bw()
+  
 
