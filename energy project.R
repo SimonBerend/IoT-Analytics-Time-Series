@@ -66,7 +66,6 @@ sumKWh
 
 ## Give the new attribute in the 6th column a header name 
 ## NOTE: if you downloaded more than 5 attributes you will need to change the column number)
-colnames(energy)
 colnames(energy)[3:5] <- c("kitchen", "laundry", "climat")
 energy <- energy[c("DateTime", "Date", "Time", "kitchen", "laundry", "climat")]
 
