@@ -43,9 +43,9 @@ yr2010 <- dbGetQuery(con,"SELECT Date, Time,
                      Sub_metering_3, global_active_power FROM yr_2010")
 
 
-        ########################################
-       ####       PRE - PROCESS            ####
-      ########################################
+########################################
+####       PRE - PROCESS            ####
+########################################
 
 ## Bind whole enitre years together: 2007 - 2009
 energy <- bind_rows(yr2007, yr2008, yr2009)
@@ -55,7 +55,7 @@ energy$DateTime <- paste(energy$Date,energy$Time)
 
 ## make an extra column with total energy consumption
 energy$total <- energy$kitchen + energy$laundry + energy$climat
-            
+
 ## calculate avarage yearly consumption
 ## energy$total gives total Wh consumed every minute
 
