@@ -31,19 +31,58 @@ pad_energy <- pad(energy,
 ####### find a way to replace NA's ##########
 # make a test df
 df_test <- pad_energy
-
+test2 <- pad_energy
 # identify the place in a column that has NA's
 which(is.na(df_test$kitchen))
 
-# make a for loop (?) that does some shiit to the NA's
-for(i in 1:length(df_test)) {
-  if(is.na(df_test$kitchen[i])) {
-    print("Damn, it's NA")
-  }
+# make a for [i] loop that does some shiit to the NA's
+# for the kitchen
+for(i in 1:nrow(test2)) {
+  if(is.na(test2$kitchen[i])) {
+    
+    check_i <- as.data.frame(test2[0,])
+    
+    if(i > 100080){ 
+      check_i <- rbind(check_i, test2[i - 10080,])}
+    
+    if(i < (nrow(test2) - 10080)) {
+      check_i <- rbind(check_i, test2[i + 10080,])}
+    print("step1")
+    mean_i <- mean(check_i$kitchen, na.rm = TRUE)
+    print("step2")
+    test2$kitchen[i] <- mean_i
+    print("step3")
+        }
 }
 
-
-
+# for the rest
+for(i in 1:nrow(df_test)) {
+  if(is.na(df_test$laundry[i])) {
+    
+    check_i <- as.data.frame(df_test[0,])
+    
+    if(i > 100080){ 
+      check_i <- rbind(check_i, df_test[i - 10080,])}
+    
+    if(i < (nrow(df_test) - 10080)) {
+      check_i <- rbind(check_i, df_test[i + 10080,])}
+    print("step1")
+    mean_i_laundry <- mean(check_i$laundry, na.rm = TRUE)
+    mean_i_climat <- mean(check_i$climat, na.rm = TRUE)
+    mean_i_total_subs <- mean(check_i$total_subs, na.rm = TRUE)
+    mean_i_global_wh <- mean(check_i$global_wh, na.rm = TRUE)
+    mean_i_global_kw <- mean(check_i$global_kw, na.rm = TRUE)
+    print("step2")
+    
+    df_test$laundry[i] <- mean_i_laundry
+    df_test$climat[i] <- mean_i_climat
+    df_test$total_subs[i] <- mean_i_total_subs
+    df_test$global_wh[i] <- mean_i_global_wh
+    df_test$global_kw[i] <- mean_i_global_kw
+    print("step3")
+    
+  }
+}
 
 
 

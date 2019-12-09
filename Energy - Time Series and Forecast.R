@@ -6,7 +6,8 @@
 ## Run pre-process  ## Packages Needed are There  ###
 #####################################################
 
-source(file = "~/IoT Analytics/Energy - Pre-Process.R",
+
+source(file = "C:/Users/Gebruiker/Desktop/Esgitit/IoT Analytics/Energy - Pre-Process.R",
        local = FALSE)
 
 
@@ -24,16 +25,86 @@ library(forecast)
 ###           CREATE SUBSETS                 ###
 ################################################
 
+# group per hour 
 en_hour <- energy %>% 
-  na.omit() %>%
-  group_by(hour) %>% 
-  summarise(total.2009 = mean(total))
+  group_by(
+    # create one column for year - month - date - hour
+    y_m_d_h = format(energy$DateTime,
+                   "%Y-%m-%d %H")) %>% 
+  summarise(avg_wh_per_min_kitchen = mean(kitchen),
+            avg_wh_per_min_laundry = mean(laundry),
+            avg_wh_per_min_climat = mean(climat), 
+            avg_wh_per_min_total_subs = mean(total_subs),
+            avg_wh_per_min_global = mean(global_wh), 
+            avg_kw_global = mean(global_kw)
+            ) 
 
-en_week <-
-  
-  en_month <-
-  
-  ################################################
+# group per day
+en_day <- energy %>% 
+  group_by(
+    # create one column for year - month - date
+    y_m_d = format(energy$DateTime,
+                     "%Y-%m-%d")) %>% 
+  summarise(avg_wh_per_min_kitchen = round(mean(kitchen),
+                                           digits = 2),
+            avg_wh_per_min_laundry = round(mean(laundry),
+                                           digits = 2),
+            avg_wh_per_min_climat = round(mean(climat),
+                                          digits = 2),
+            avg_wh_per_min_total_subs = round(mean(total_subs),
+                                              digits = 2),
+            avg_wh_per_min_global = round(mean(global_wh),
+                                          digits = 2),
+            avg_kw_global = round(mean(global_kw),
+                                  digits = 2)
+            )
+
+# group per week
+en_week <- energy %>% 
+  group_by(
+    # create one column for year - week
+    year_week = format(energy$DateTime,
+                       "%Y - %W")) %>% 
+  summarise(avg_wh_per_min_kitchen = round(mean(kitchen),
+                                           digits = 2),
+            avg_wh_per_min_laundry = round(mean(laundry),
+                                           digits = 2),
+            avg_wh_per_min_climat = round(mean(climat),
+                                          digits = 2),
+            avg_wh_per_min_total_subs = round(mean(total_subs),
+                                              digits = 2),
+            avg_wh_per_min_global = round(mean(global_wh),
+                                          digits = 2),
+            avg_kw_global = round(mean(global_kw),
+                                  digits = 2)
+  )
+# get rid of the "left-over" weeks 00 & 53
+# in this way, you can set freq in ts at 52 without issues
+en_week <- en_week %>% filter(year_week != "2007 - 53" & year_week != "2008 - 00" &
+                              year_week != "2008 - 53" & year_week != "2009 - 00" &
+                              year_week != "2009 - 53" & year_week != "2010 - 00" )
+
+# group by month  
+en_month <- energy %>% 
+  group_by(
+    # create one column for year - month
+    year_month = format(energy$DateTime,
+                       "%Y - %m")) %>% 
+  summarise(avg_wh_per_min_kitchen = round(mean(kitchen),
+                                           digits = 2),
+            avg_wh_per_min_laundry = round(mean(laundry),
+                                           digits = 2),
+            avg_wh_per_min_climat = round(mean(climat),
+                                          digits = 2),
+            avg_wh_per_min_total_subs = round(mean(total_subs),
+                                              digits = 2),
+            avg_wh_per_min_global = round(mean(global_wh),
+                                          digits = 2),
+            avg_kw_global = round(mean(global_kw),
+                                  digits = 2)
+  )
+    
+################################################
 ###     TURN SUB SETS INTO TS OBJECTS        ###
 ################################################
 
