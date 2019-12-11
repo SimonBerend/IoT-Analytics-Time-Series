@@ -63,8 +63,6 @@ dc_month_laundry <- decompose(ts_month_laundry)
 dc_month_total <- decompose(ts_month_total)
 dc_month_global <- decompose(ts_month_global)
 
-dc_month_all <- decompose(ts_month_all)
-
 # isolate trends and clear NA's
 trend_climat <- na.omit(dc_month_climat$trend)
 trend_kitchen <- na.omit(dc_month_kitchen$trend)
@@ -72,45 +70,17 @@ trend_laundry <- na.omit(dc_month_laundry$trend)
 trend_total <- na.omit(dc_month_total$trend)
 trend_global <- na.omit(dc_month_global$trend)
 
-trend_all <- na.omit(dc_month_all$trend)
-
 # forecast trends
-fc_trend_climat <- forecast(trend_climat,
-                              h=7,level = c(10, 25))
-fc_trend_kitchen <- forecast(trend_kitchen,
-                            h=7,level = c(10, 25))
-fc_trend_laundry <- forecast(trend_laundry,
-                             h=7,level = c(10, 25))
-fc_trend_total <- forecast(trend_total,
-                             h=7,level = c(10, 25))
-fc_trend_global <- forecast(trend_global,
-                             h=7,level = c(10, 25))
+fc_trend_climat <- forecast(trend_climat, h=7,level = c(10, 25))
+fc_trend_kitchen <- forecast(trend_kitchen, h=7,level = c(10, 25))
+fc_trend_laundry <- forecast(trend_laundry, h=7,level = c(10, 25))
+fc_trend_total <- forecast(trend_total, h=7,level = c(10, 25))
+fc_trend_global <- forecast(trend_global, h=7,level = c(10, 25))
 
-
-fc_trend_all <- forecast(trend_all, h = 7, level = c(10,25))
-
-
-colare <- 
-
-# plot
-fc_trends_chart <- highchart(type = "stock") %>% 
-  hc_title(text = "Energy Consumption Trends: actual and Forecast") %>% 
-  hc_subtitle(text = "in avg Wh per Minute") %>% 
-  hc_add_series(fc_trend_kitchen, id = "Kitchen", name = "Kitchen",
-                addOriginal = TRUE, color = "brown") %>% 
-  hc_add_series(fc_trend_climat, id = "Climat", name = "Climat",
-                addOriginal = TRUE, color = "red") %>% 
-  hc_add_series(fc_trend_laundry, id = "Laundry", name = "Laundry", 
-                addOriginal = TRUE, color = "green") %>% 
-  hc_add_series(fc_trend_total, id = "All Subs", name = "All Subs", 
-                addOriginal = TRUE, color = "blue") %>% 
-  hc_add_series(fc_trend_global, id = "Global", name = "Global", 
-                addOriginal = TRUE, color = "yellow") %>% 
-  hc_tooltip(valueDecimals = 2)
- 
-fc_trends_chart
-
-# plot
+# plot:
+# High Charter
+# 2 series per meter:
+# actual  and forecast $ mean
 fc_trends_chart <- highchart(type = "stock") %>% 
   hc_title(text = "Energy Consumption Trends: actual and Forecast") %>% 
   hc_subtitle(text = "in avg Wh per Minute") %>% 
@@ -126,6 +96,23 @@ fc_trends_chart <- highchart(type = "stock") %>%
   hc_add_series(trend_global, id = "Global", name = "Global", color = "slateblue") %>% 
   hc_tooltip(valueDecimals = 2)
 
+# show plot 
 fc_trends_chart
 
-
+# Older Version:
+# only 1 series for actual and forecasted values
+# problem: shows confidence intervals
+never_mind <- highchart(type = "stock") %>% 
+  hc_title(text = "Energy Consumption Trends: actual and Forecast") %>% 
+  hc_subtitle(text = "in avg Wh per Minute") %>% 
+  hc_add_series(fc_trend_kitchen, id = "Kitchen", name = "Kitchen",
+                addOriginal = TRUE, color = "brown") %>% 
+  hc_add_series(fc_trend_climat, id = "Climat", name = "Climat",
+                addOriginal = TRUE, color = "red") %>% 
+  hc_add_series(fc_trend_laundry, id = "Laundry", name = "Laundry", 
+                addOriginal = TRUE, color = "green") %>% 
+  hc_add_series(fc_trend_total, id = "All Subs", name = "All Subs", 
+                addOriginal = TRUE, color = "blue") %>% 
+  hc_add_series(fc_trend_global, id = "Global", name = "Global", 
+                addOriginal = TRUE, color = "yellow") %>% 
+  hc_tooltip(valueDecimals = 2)
