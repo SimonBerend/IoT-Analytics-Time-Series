@@ -118,16 +118,6 @@ ts_week_kitchen <- ts(en_week$avg_wh_per_min_kitchen,
                       frequency=52,
                       start=c(2007,1))
 
-
-## autoplot: climat - week
-autoplot(ts_week_climat,
-         ts.colour = 'darkred',
-         xlab = "Time",
-         ylab = "Watt Hours",
-         main = "Climat Room") +
-  theme_bw()
-
-
 ############################################
 ##              Forecasting               ##
 ############################################

@@ -1,94 +1,25 @@
-#################################################################
-#####                 TIME SERIES  and FORECAST            ######
-#################################################################
-
-#####################################################
-## Run pre-process  ## Packages Needed are There  ###
-#####################################################
-
+#####################################
+##  TIME SERIES  and HighCharter  ##
+##      Monthly Trends         ####
+##################################
+##        Run pre-process      ##
+##  Packages Needed are There  #
+###############################
 
 source(file = "C:/Users/Gebruiker/Desktop/Esgitit/IoT Analytics/Energy - Pre-Process.R",
        local = FALSE)
 
+## Package to create the chart below
+install.packages("highcharter")
+library(highcharter)
 
-################################################
-##            PACKAGES                       ###
-################################################
-install.packages("forecast")
-library(forecast)
-
-
-
-
-
-################################################
-###           CREATE SUBSETS                 ###
-################################################
-
-# group per hour 
-en_hour <- energy %>% 
-  group_by(
-    # create one column for year - month - date - hour
-    y_m_d_h = format(energy$DateTime,
-                     "%Y-%m-%d %H")) %>% 
-  summarise(avg_wh_per_min_kitchen = mean(kitchen),
-            avg_wh_per_min_laundry = mean(laundry),
-            avg_wh_per_min_climat = mean(climat), 
-            avg_wh_per_min_total_subs = mean(total_subs),
-            avg_wh_per_min_global = mean(global_wh), 
-            avg_kw_global = mean(global_kw)
-  ) 
-
-# group per day
-en_day <- energy %>% 
-  group_by(
-    # create one column for year - month - date
-    y_m_d = format(energy$DateTime,
-                   "%Y-%m-%d")) %>% 
-  summarise(avg_wh_per_min_kitchen = round(mean(kitchen),
-                                           digits = 2),
-            avg_wh_per_min_laundry = round(mean(laundry),
-                                           digits = 2),
-            avg_wh_per_min_climat = round(mean(climat),
-                                          digits = 2),
-            avg_wh_per_min_total_subs = round(mean(total_subs),
-                                              digits = 2),
-            avg_wh_per_min_global = round(mean(global_wh),
-                                          digits = 2),
-            avg_kw_global = round(mean(global_kw),
-                                  digits = 2)
-  )
-
-# group per week
-en_week <- energy %>% 
-  group_by(
-    # create one column for year - week
-    year_week = format(energy$DateTime,
-                       "%Y - %W")) %>% 
-  summarise(avg_wh_per_min_kitchen = round(mean(kitchen),
-                                           digits = 2),
-            avg_wh_per_min_laundry = round(mean(laundry),
-                                           digits = 2),
-            avg_wh_per_min_climat = round(mean(climat),
-                                          digits = 2),
-            avg_wh_per_min_total_subs = round(mean(total_subs),
-                                              digits = 2),
-            avg_wh_per_min_global = round(mean(global_wh),
-                                          digits = 2),
-            avg_kw_global = round(mean(global_kw),
-                                  digits = 2)
-  )
-# get rid of the "left-over" weeks 00 & 53
-# in this way, you can set freq in ts at 52
-en_week <- en_week %>% filter(year_week != "2007 - 53" & year_week != "2008 - 00" &
-                                year_week != "2008 - 53" & year_week != "2009 - 00" &
-                                year_week != "2009 - 53" & year_week != "2010 - 00" )
-
+###  SUBSET for Months
 # group by month  
 en_month <- energy %>% 
+  filter(DateTime > "2007-10-31 23:59:00") %>% 
   group_by(
     # create one column for year - month
-    year_month = format(energy$DateTime,
+    year_month = format(DateTime,
                         "%Y - %m")) %>% 
   summarise(avg_wh_per_min_kitchen = round(mean(kitchen),
                                            digits = 2),
@@ -101,92 +32,64 @@ en_month <- energy %>%
             avg_wh_per_min_global = round(mean(global_wh),
                                           digits = 2),
             avg_kw_global = round(mean(global_kw),
-                                  digits = 2)
-  )
+                                  digits = 2))
 
-####################################
-###     CREATE TS OBJECTS        ###
-####################################
+## CREATE TS OBJECTS
+# Climat
+ts_month_climat <- ts(en_month$avg_wh_per_min_climat,
+                     frequency = 12, start = c(2007,11))
+# Kitchen
+ts_month_kitchen <- ts(en_month$avg_wh_per_min_kitchen,
+                      frequency = 12, start = c(2007,11))
+# Laundry
+ts_month_laundry <- ts(en_month$avg_wh_per_min_laundry,
+                       frequency = 12, start = c(2007,11))
+# total subs
+ts_month_total <- ts(en_month$avg_wh_per_min_total_subs,
+                       frequency = 12, start = c(2007,11))
+#global
+ts_month_global <- ts(en_month$avg_wh_per_min_global,
+                       frequency = 12, start = c(2007,11))
 
-## Create TS object with for climat weekly
-ts_week_climat <- ts(en_week$avg_wh_per_min_climat,
-                     frequency=52,
-                     start=c(2007,1))
+## Decompose
+dc_month_climat <- decompose(ts_month_climat)
+dc_month_kitchen <- decompose(ts_month_kitchen)
+dc_month_laundry <- decompose(ts_month_laundry)
+dc_month_total <- decompose(ts_month_total)
+dc_month_global <- decompose(ts_month_global)
 
-## Create TS object with for kitchen weekly
-ts_week_kitchen <- ts(en_week$avg_wh_per_min_kitchen,
-                      frequency=52,
-                      start=c(2007,1))
+# isolate trends and clear NA's
+trend_climat <- na.omit(dc_month_climat$trend)
+trend_kitchen <- na.omit(dc_month_kitchen$trend)
+trend_laundry <- na.omit(dc_month_laundry$trend)
+trend_total <- na.omit(dc_month_total$trend)
+trend_global <- na.omit(dc_month_global$trend)
 
+# plot
+trends_chart <- highchart(type = "chart") %>% 
+  hc_title(text = "Energy Consumption Trends") %>% 
+  hc_subtitle(text = "in avg Wh per Minute") %>% 
+  hc_add_series(trend_kitchen, id = "Kitchen", name = "Kitchen") %>% 
+  hc_add_series(trend_climat, id = "Climat", name = "Climat") %>% 
+  hc_add_series(trend_laundry, id = "Laundry", name = "Laundry") %>% 
+  hc_add_series(trend_total, id = "All Subs", name = "All Subs") %>% 
+  hc_add_series(trend_global, id = "Global", name = "Global")
 
-## autoplot: climat - week
-autoplot(ts_week_climat,
-         ts.colour = 'darkred',
-         xlab = "Time",
-         ylab = "Watt Hours",
-         main = "Climat Room") +
-  theme_bw()
+trends_chart
 
-
-############################################
-##              Forecasting               ##
-############################################
-
-## ts linear regression: 
-##  - ts_week_climat 
-## use summary() to obtain the forecast's R2 and RMSE
-fit_week_climat <- tslm(ts_week_climat ~ trend + season) 
-summary(fit_week_climat)
-
-
-## Forecast : week climat 
-## 5 weeks left in 2010: Forecast 5 time periods ahead
-## confidence levels 80 and 90
-fc_fit_week_climat <- forecast(fit_week_climat,
-                               h=5,
-                               level=c(80,90))
-
-## Plot climat fc for end 2010
-plot(fc_fit_week_climat, 
-     #ylim = c(0, 30),
-     xlim = c(2010, 2011),
-     ylab = "avg Watt-Hours per minute", 
-     xlab ="Time",
-     main = "Forecast: Climat Room",
-)
+trends_chart <- highchart(type = "stock") %>% 
+  hc_title(text = "Energy Consumption Trends") %>% 
+  hc_subtitle(text = "in avg Wh per Minute") %>% 
+  
+  hc_add_series(trend_climat, id = "Climat", name = "Climat", type = "column") %>% 
+  hc_add_series(trend_laundry, id = "Laundry", name = "Laundry") %>% 
+  hc_add_series(trend_total, id = "All Subs", name = "All Subs") %>% 
+  hc_add_series(trend_global, id = "Global", name = "Global") %>% 
+  hc_tooltip(pointFormat = '{point.x: %Y-%m-%d}
+                            
+ 
+                            {point.y:.2f}%')
 
 
-##############################
-##      DECOMPOSE           ##
-##############################
 
-## Decompose : climat - week 
-## trend, seasonal and remainder
-## use plot() & summary() to inspect
-comp_week_climat <- decompose(ts_week_climat)
-
-## adjust original ts set for seasonality
-ts_week_climat_adj_season <- ts_week_climat - comp_week_climat$seasonal
-## you can test Seasonal adjustment by running decompose() on new ts 
-## seasonality will appear again but with very low values
-
-## Holt Winters Exponential Smoothing & Plot
-ts_hw_week_climat <- HoltWinters(ts_week_climat_adj_season,
-                                 beta = FALSE,
-                                 gamma = FALSE)
-plot(ts_hw_week_climat,
-     #ylim = c(0, 25)
-)
-
-## HoltWinters forecast & plot
-## USE FOR TREND
-## with deinished confidence levels
-fc_hw_week_climat <- forecast(ts_week_climat_hw,
-                              h=5,
-                              level = c(10, 25))
-plot(fc_hw_week_climat,
-     ylim = c(5, 10),
-     xlim = c(2010.6, 2011),
-     ylab= "avg Watt-Hours per Minute",
-     xlab="Time",
-     main = "Climat Room")
+trends_chart

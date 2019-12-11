@@ -1,6 +1,6 @@
-#################################################################
-#####                 TIME SERIES  and FORECAST            ######
-#################################################################
+########################################################
+#####        TIME SERIES  and FORECAST            ######
+########################################################
 
 #####################################################
 ## Run pre-process  ## Packages Needed are There  ###
@@ -79,7 +79,7 @@ en_week <- energy %>%
                                   digits = 2)
   )
 # get rid of the "left-over" weeks 00 & 53
-# in this way, you can set freq in ts at 52 without issues
+# in this way, you can set freq in ts at 52
 en_week <- en_week %>% filter(year_week != "2007 - 53" & year_week != "2008 - 00" &
                               year_week != "2008 - 53" & year_week != "2009 - 00" &
                               year_week != "2009 - 53" & year_week != "2010 - 00" )
@@ -104,26 +104,23 @@ en_month <- energy %>%
                                   digits = 2)
   )
     
-################################################
-###     TURN SUB SETS INTO TS OBJECTS        ###
-################################################
+####################################
+###     CREATE TS OBJECTS        ###
+####################################
+
+## Create TS object with for climat weekly
+ts_week_climat <- ts(en_week$avg_wh_per_min_climat,
+                       frequency=52,
+                       start=c(2007,1))
+
+## Create TS object with for kitchen weekly
+ts_week_kitchen <- ts(en_week$avg_wh_per_min_kitchen,
+                       frequency=52,
+                       start=c(2007,1))
 
 
-
-#############################
-#####    TIME SERIES   ######
-#############################
-
-##### plot 1 #####
-
-## Subset to one observation per week on Mondays at 8:00pm for 2007, 2008 and 2009
-energy_weekly <- filter(energy, weekday == "maandag" & hour == 20 & minute == 0)
-
-## Create TS object with submeter 3: climat
-ts_sub3_energy_weekly <- ts(energy_weekly$climat, frequency=52, start=c(2007,1))
-
-## Plot sub-meter 3 with autoplot - add labels, color
-autoplot(ts_sub3_energy_weekly,
+## autoplot: climat - week
+autoplot(ts_week_climat,
          ts.colour = 'darkred',
          xlab = "Time",
          ylab = "Watt Hours",
@@ -131,116 +128,65 @@ autoplot(ts_sub3_energy_weekly,
   theme_bw()
 
 
-##### plot 2  #####
+############################################
+##              Forecasting               ##
+############################################
 
-## Subset to one observation per hour during the 2008 august dip
-energy_aug_2008 <- filter(energy, year == 2008 & week == 33 &
-                            minute == 0)
-
-## Create TS object with global in wh
-## Note: TS frequency does not recognize '24' (only 12 & 4 ?)
-ts_global_wh_aug_2008 <- ts(energy_aug_2008$global_wh,
-                            frequency = 24,
-                            start = c(1, 1))
-
-## Plot global wh with autoplot - add labels, color
-autoplot(ts_global_wh_aug_2008,
-         ts.colour = 'darkred',
-         xlab = "Time",
-         ylab = "Watt Hours",
-         main = "Global Consumption in Week 33, 2008",
-         xmin = 1,
-         xmax = 8) +
-  theme_bw()
+## ts linear regression: 
+##  - ts_week_climat 
+## use summary() to obtain the forecast's R2 and RMSE
+fit_week_climat <- tslm(ts_week_climat ~ trend + season) 
+summary(fit_week_climat)
 
 
-##############################################################
-##                    Forecasting                           ##
-##############################################################
-
-## Apply time series linear regression to the sub-meter 3 ts object: 
-##  -- ts_sub3_energy_weekly: weekly energy over 3 years for climat room
-## use summary to obtain R2 and RMSE from the model you built
-fit_sub3 <- tslm(ts_sub3_energy_weekly ~ trend + season) 
-summary(fit_sub3)
-
-
-## Create Forecast for sub-meter 3. 
-## Forecast ahead 20 time periods
+## Forecast : week climat 
+## 5 weeks left in 2010: Forecast 5 time periods ahead
 ## confidence levels 80 and 90
-forecast_fit_sub3 <- forecast(fit_sub3,
-                              h=20,
+fc_fit_week_climat <- forecast(fit_week_climat,
+                              h=5,
                               level=c(80,90))
 
-## Plot sub-meter 3 forecast, limit y and add labels
-plot(forecast_fit_sub3, 
-     ylim = c(0, 30), 
-     ylab = "Watt-Hours", 
+## Plot climat fc for end 2010
+plot(fc_fit_week_climat, 
+     #ylim = c(0, 30),
+     xlim = c(2010, 2011),
+     ylab = "avg Watt-Hours per minute", 
      xlab ="Time",
-     main = "Forecast of Energy Consumption in Climat Room",
-     sub = "based on weely sample of wh, at Mo, 20:00:00")
-
-###############   forecast with a different subset     ###########
-##
-## Sub-meter 1 with your choice of frequency, time period and confidence levels
-##
-## Create TS object with submeter 1: kitchen
-ts_kitchen_energy_weekly <- ts(energy_weekly$kitchen, frequency=52, start=c(2007,1))
+     main = "Forecast: Climat Room",
+     )
 
 
-## Apply time series linear regression to the kitchen ts object
-fit_kitchen_weekly <- tslm(ts_kitchen_energy_weekly ~ trend + season) 
-summary(fit_kitchen_weekly)
+##############################
+##      DECOMPOSE           ##
+##############################
 
-## Forecast: ahead 20 time periods (weeks)
-## confidence levels 80 and 90
-forecast_fit_kitchen <- forecast(fit_kitchen_weekly,
-                                 h=20,
-                                 level=c(80,90))
-
-## Plot kitchen forecast
-plot(forecast_fit_kitchen, 
-     #ylim = c(0, 30), 
-     ylab = "Watt-Hours", 
-     xlab ="Time",
-     main = "Forecast of Energy Consumption in Kitchen",
-     sub = "based on weely sample, at Mo, 20:00:00")
-
-########################################################
-###                      DECOMPOSE                  ####
-########################################################
-
-## Decompose sub 3: climat into trend, seasonal and remainder
-components_sub3_weekly <- decompose(ts_sub3_energy_weekly)
-## Plot decomposed sub-meter 3 
-plot(components_sub3_weekly)
-## Check summary statistics for decomposed sub-meter 3 
-summary(components_sub3_weekly)
+## Decompose : climat - week 
+## trend, seasonal and remainder
+## use plot() & summary() to inspect
+comp_week_climat <- decompose(ts_week_climat)
 
 ## adjust original ts set for seasonality
-ts_sub3_weekly_season_adj <- ts_sub3_energy_weekly - 
-  components_sub3_weekly$seasonal
-
-## Test Seasonal Adjustment by running Decompose again. 
-## Note the very, very small scale for Seasonal
-plot(decompose(ts_sub3_weekly_season_adj))
+ts_week_climat_adj_season <- ts_week_climat - comp_week_climat$seasonal
+## you can test Seasonal adjustment by running decompose() on new ts 
+## seasonality will appear again but with very low values
 
 ## Holt Winters Exponential Smoothing & Plot
-ts_sub3_holtwinters <- HoltWinters(ts_sub3_weekly_season_adj,
+ts_hw_week_climat <- HoltWinters(ts_week_climat_adj_season,
                                    beta = FALSE,
                                    gamma = FALSE)
-plot(ts_sub3_holtwinters, ylim = c(0, 25))
+plot(ts_hw_week_climat,
+     #ylim = c(0, 25)
+     )
 
 ## HoltWinters forecast & plot
 ## USE FOR TREND
 ## with deinished confidence levels
-ts_sub3_hw_fc <- forecast(ts_sub3_holtwinters,
-                          h=25,
+fc_hw_week_climat <- forecast(ts_week_climat_hw,
+                          h=5,
                           level = c(10, 25))
-plot(ts_sub3_hw_fc,
-     ylim = c(0, 20),
-     ylab= "Watt-Hours",
+plot(fc_hw_week_climat,
+     ylim = c(5, 10),
+     xlim = c(2010.6, 2011),
+     ylab= "avg Watt-Hours per Minute",
      xlab="Time",
-     main = "Climat Room",
-     sub = "Smooth HW Forecast",
-     start (2009))  ## How does this start work?
+     main = "Climat Room")
