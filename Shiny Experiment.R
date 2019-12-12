@@ -5,7 +5,6 @@ pacman::p_load("ggplot2", "shiny", "shinydashboard",
                "dplyr", "lubridate")
 
 # Pre-process
-# debug pls
 # source(file = "C:/Users/Gebruiker/Desktop/Esgitit/IoT Analytics/Energy - Pre-Process.R",
 #       local = FALSE)
 
@@ -55,18 +54,19 @@ body <- dashboardBody(
 server <- function(input, output) {
   
   output$smooth_avg <- renderPlot({
-    ggplot(data = energy %>% 
-             group_by( # daily
-               date = as.Date(energy$DateTime,"%Y-%m-%d", tz = "CET")) %>% 
-             summarise(overall_avg = round(mean(global_wh), digits = 1) %>%  
-             filter(year(date) == input$SelectYear)) + 
-      geom_line(aes(x = date, y = overall_avg)) +
-        labs(title = "Yearly E-Consumption",
-             subtitle = "(Smoothened)",
-             y = "avg Consumption in Wh per Minute",
-             x = "Months")+
-        scale_x_date(date_breaks = "1 week", date_labels = "%W"))
-      })
+    ggplot(data = energy %>%
+             filter(year(Date) == input$SelectYear) %>% 
+             group_by(Date) %>% 
+             summarise(overall_avg = round(mean(global_wh), digits = 1))
+    ) +
+      geom_smooth(aes(x = Date, y = overall_avg),
+                  span = 0.1, se = F) +
+      labs(title = "Yearly E-Consumption",
+           subtitle = "(Smoothened)",
+           y = "avg Consumption in Wh per Minute",
+           x = "Months") +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b")
+  })
   
   output$Histo_ActiveEnergy_avg <- renderPlot({
     hist(dashdata$ActiveEnergy_avg, 

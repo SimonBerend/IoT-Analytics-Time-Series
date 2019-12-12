@@ -15,11 +15,21 @@ dashdata <- readRDS("data_ready.rds")
 # Tweek the Server
 server <- function(input, output) {
   
-  output$Line_ActiveEnergy_avg <- renderPlot({
-    ggplot(data = dashdata %>% filter(year(date) == input$SelectYear)) + 
-      geom_line(aes(x = date, y = ActiveEnergy_avg)) +
-      ylab("Active energy") + xlab("Time")})
-  
+   output$smooth_avg <- renderPlot({
+    ggplot(data = energy %>%
+             filter(year(Date) == input$SelectYear) %>% 
+             group_by(Date) %>% 
+             summarise(overall_avg = round(mean(global_wh), digits = 1))
+           ) +
+       geom_smooth(aes(x = Date, y = overall_avg),
+                   span = 0.1, se = F) +
+       labs(title = "Yearly E-Consumption",
+            subtitle = "(Smoothened)",
+            y = "avg Consumption in Wh per Minute",
+            x = "Months") +
+       scale_x_date(date_breaks = "1 month", date_labels = "%b")
+  })
+   
   output$Histo_ActiveEnergy_avg <- renderPlot({
     hist(dashdata$ActiveEnergy_avg, 
          breaks = input$Breaks,
@@ -47,7 +57,7 @@ ui <- dashboardPage(
   
   dashboardBody(
     title = "Them Graphs",
-    box(plotOutput(outputId = "Line_ActiveEnergy_avg")),
+    box(plotOutput(outputId = "smooth_avg")),
     box(plotOutput(outputId = "Histo_ActiveEnergy_avg"))
   ))
 
