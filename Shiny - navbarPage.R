@@ -10,22 +10,24 @@ pacman::p_load("ggplot2", "shiny", "shinydashboard", "dplyr", "lubridate")
 # User Interface ----------------------------------------------------------
 
 ui <- navbarPage("Your Energy", inverse = TRUE,
-                 tabPanel("Overview",
+                 tabPanel("Overview", icon = icon("home"),
                           titlePanel("Overview of Energy Consumption"),
                           sidebarLayout(
                             sidebarPanel(width = 3,
-                                         
-                              selectInput(inputId = "SelectYear",
-                                          label = "Choose a year for the line chart to show:",
-                                          choices = list("2007", "2008", "2009", "2010"))
+                                         selectInput(status = "primary",
+                                                     inputId = "SelectYear",
+                                                     label = "Choose a year for the line chart to show:",
+                                                     choices = list("2007", "2008", "2009", "2010"))
                                           ),
                               mainPanel(width = 9,
-                                        box(plotOutput(outputId = "smooth_avg"))
+                                        box(status = "info",
+                                            plotOutput(outputId = "smooth_avg")),
+                                        box(plotlyOutput(outputId = "bar_overview"))
                                         )
                                        )
                           ),
                  
-                 tabPanel("Trends",
+                 tabPanel("Trends", icon = icon("chart-line"),
                           sidebarLayout(
                             sidebarPanel(width = 12,
                                          h1("Past and Forecasted Trends in Energy Consumption")),
@@ -36,8 +38,8 @@ ui <- navbarPage("Your Energy", inverse = TRUE,
                           ),
                           
                  navbarMenu("More",
-                            tabPanel("About IoT Analytics"),
-                            tabPanel("Contact")
+                            tabPanel("About IoT Analytics", icon = icon("info")),
+                            tabPanel("Contact", icon = icon("address-card"))
                             )
                  )
 
@@ -59,14 +61,19 @@ server <- function(input, output) {
       scale_x_date(date_breaks = "1 month", date_labels = "%b")
   })
   
+  # this is not working
   output$bar_overview <- renderPlotly({
-    plot_ly(data = energy %>%
-             filter(year(Date) == input$SelectYear) %>% 
-             group_by(Date) %>% 
-             summarise(overall_avg = round(mean(global_wh), digits = 1))
-    plot_ly(data, x = ~Animals, y = ~SF_Zoo, type = 'bar', name = 'SF Zoo') %>%
-              add_trace(y = ~LA_Zoo, name = 'LA Zoo') %>%
-              layout(yaxis = list(title = 'Count'), barmode = 'group')
+    plot_ly(data = energy %>% 
+              group_by(year, quarter) %>% 
+              summarise(kitchen = round(sum(kitchen)/1000, digits = 1),
+                        laundry = round(sum(laundry)/1000, digits = 1),
+                        climat = round(sum(climat)/1000, digits = 1)) %>% 
+              filter(year == input$SelectYear),
+            x = ~quarter, y = ~kitchen,
+            type = 'bar', name = 'Kitchen') %>% 
+      add_trace(y = ~laundry, name = 'Laundry') %>%
+      add_trace(y= ~climat, name = 'Climat') %>% 
+      layout(yaxis = list(title = 'Kwh'), barmode = 'group')
             
   })
   
