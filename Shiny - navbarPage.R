@@ -1,7 +1,8 @@
 # # # Get Yo Packs # # #
 if (!require("pacman")) install.packages("pacman")
 
-pacman::p_load("ggplot2", "shiny", "shinydashboard", "dplyr", "lubridate")
+pacman::p_load("ggplot2", "shiny", "shinydashboard", "dplyr",
+               "lubridate", "png", "plotly", "highcharter")
 
 
 # Data?
@@ -14,15 +15,19 @@ ui <- navbarPage("Your Energy", inverse = TRUE,
                           titlePanel("Overview of Energy Consumption"),
                           sidebarLayout(
                             sidebarPanel(width = 3,
-                                         selectInput(status = "primary",
-                                                     inputId = "SelectYear",
+                                         selectInput(inputId = "SelectYear",
                                                      label = "Choose a year for the line chart to show:",
-                                                     choices = list("2007", "2008", "2009", "2010"))
+                                                     choices = list("2007", "2008", "2009", "2010")),
+                                         selectInput(inputId = "SelectSub",
+                                                     label = "Choose a room to compare over the years:",
+                                                     choices = list("climat", "laundry", "kitchen"))
                                           ),
                               mainPanel(width = 9,
-                                        box(status = "info",
-                                            plotOutput(outputId = "smooth_avg")),
-                                        box(plotlyOutput(outputId = "bar_overview"))
+                                        box(plotOutput(outputId = "smooth_avg")),
+                                        box(plotlyOutput(outputId = "bar_overview")),
+                                        box(plotlyOutput(outputId = "bar_areas")),
+                                        box(h4("Yearly Costs Here", align = "center"),
+                                            h4("Under Construction", align = "center"))
                                         )
                                        )
                           ),
@@ -38,8 +43,32 @@ ui <- navbarPage("Your Energy", inverse = TRUE,
                           ),
                           
                  navbarMenu("More",
-                            tabPanel("About IoT Analytics", icon = icon("info")),
-                            tabPanel("Contact", icon = icon("address-card"))
+                            tabPanel("About", icon = icon("info"),
+                                     sidebarLayout(
+                                       mainPanel(width = 8,
+                                                 h2("IoT Analytics", align = "center"),
+                                                 h3("makes your home awesome", align = "center"),
+                                                 h5("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet gravida ipsum, vitae semper leo. Pellentesque lobortis laoreet aliquam. Vivamus bibendum posuere est, vitae congue magna lacinia non. Suspendisse tempus ullamcorper condimentum. Duis id tortor sit amet dolor rutrum finibus. Sed lorem purus, rhoncus eu iaculis sed, varius vitae nulla.",
+                                                    align = "center")),
+                                       mainPanel(width = 4,
+                                                 plotOutput(outputId = "energy_logo")
+                                                 )
+                                       )
+                                     ),
+                            tabPanel("Contact", icon = icon("address-card"),
+                                     sidebarLayout(
+                                       sidebarPanel = NULL,
+                                       mainPanel = mainPanel(
+                                         width = 4,
+                                         offset = 2,
+                                         h3("Contact", align = "center"),
+                                         h4("Mr. Eric Foreman"),
+                                         h4("Senior Data Analyst"),
+                                         h4("Point Place, Wisconsin"),
+                                         h4("0800-HELLO WISCO")
+                                       )
+                                     )
+                                     )
                             )
                  )
 
@@ -61,7 +90,7 @@ server <- function(input, output) {
       scale_x_date(date_breaks = "1 month", date_labels = "%b")
   })
   
-  # this is not working
+
   output$bar_overview <- renderPlotly({
     plot_ly(data = energy %>% 
               group_by(year, quarter) %>% 
@@ -78,8 +107,28 @@ server <- function(input, output) {
   })
   
   
+  output$bar_areas <- renderPlotly({
+    plot_ly(data = en_quart_subs %>% 
+              filter(submeter == input$SelectSub),
+            x = ~quarter, y = ~yr07,
+            type = 'bar', name = '2007') %>% 
+      add_trace(y = ~yr08, name = '2008') %>%
+      add_trace(y= ~yr09, name = '2009') %>%
+      add_trace(y= ~yr10, name = '2010') %>%
+      layout(yaxis = list(title = 'Kwh'), barmode = 'group')
+    
+  })
+  
   output$fc_trends_chart <- renderHighchart({fc_trends_chart
   })
+  
+  output$energy_logo <- renderPlot({
+    pic = readPNG('C:/Users/Gebruiker/Desktop/Esgitit/IoT Analytics/www/energy_logo.png')
+    plot.new()
+    grid::grid.raster(pic)
+    
+  })
+ 
 }
 
 # Run App ----------------------------------------------------------------

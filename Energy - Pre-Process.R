@@ -134,6 +134,14 @@ energy$hour <- hour(energy$DateTime)
 energy$minute <- minute(energy$DateTime)
 
 
+
+# Save data frame ---------------------------------------------------------
+# set local directory
+setwd("C:/Users/Gebruiker/Desktop//Esgitit/IoT Analytics")
+# save energy as rds
+saveRDS(energy, file = "energy.RDS")
+
+
 # Extra: calculate avg yearly consumption ---------------------------------
 # energy$global_wh gives Wh consumed in entire house
 # filter out 2010 to use only complete years
